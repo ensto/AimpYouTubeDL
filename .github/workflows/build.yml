@@ -2,30 +2,45 @@ name: Build AimpYouTubeDL
 
 on:
   push:
-    branches:
-      - main
+    branches: [ master, main ]
   pull_request:
-    branches:
-      - main
+    branches: [ master, main ]
   workflow_dispatch:
+
+env:
+  SOLUTION_FILE_PATH: AimpYouTubeDL.sln
+  BUILD_CONFIGURATION: Release
 
 jobs:
   build:
     runs-on: windows-latest
-
+    strategy:
+      matrix:
+        platform: [x86]
+# platform: [x86, x64]
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v3
-
-    - name: Set up Visual Studio
-      uses: microsoft/setup-msbuild@v1
-
-    - name: Build solution
-      run: cmake --build build --config Release
-      
-
-    - name: Archive build output
-      uses: actions/upload-artifact@v3
+    - uses: actions/checkout@v4
       with:
-        name: AimpYouTubeDL-x64
-        path: build/Release/
+        submodules: recursive
+
+    - name: Add MSBuild to PATH
+      uses: microsoft/setup-msbuild@v1.1
+
+    - name: Setup Visual Studio Developer Command Prompt
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: ${{ matrix.platform }}
+
+    - name: Restore NuGet packages
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Build
+      working-directory: ${{env.GITHUB_WORKSPACE}}
+      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{matrix.platform}} ${{env.SOLUTION_FILE_PATH}}
+
+    - name: Upload Build Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+		     name: AimpYouTubeDL
+         path: build/Release/
