@@ -1,50 +1,42 @@
-name: Build AimpYouTubeDL
+name: Build Solution
 
 on:
   push:
-    branches: [ master, main ]
+    branches: [ main ]
   pull_request:
-    branches: [ master, main ]
+    branches: [ main ]
   workflow_dispatch:
-
-env:
-  SOLUTION_FILE_PATH: AimpYouTubeDL.sln
-  BUILD_CONFIGURATION: Release
 
 jobs:
   build:
     runs-on: windows-latest
-    strategy:
-      matrix:
-        platform: [x86]
-# platform: [x86, x64]
+    
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-
-    - name: Add MSBuild to PATH
+    - uses: actions/checkout@v3
+    
+    - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v1.1
-
-    - name: Setup Visual Studio Developer Command Prompt
-      uses: ilammy/msvc-dev-cmd@v1
+    
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
       with:
-        arch: ${{ matrix.platform }}
-
+        dotnet-version: '6.0.x'
+    
     - name: Restore NuGet packages
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: nuget restore ${{env.SOLUTION_FILE_PATH}}
-
-    - name: Build
-      working-directory: ${{env.GITHUB_WORKSPACE}}
-      run: msbuild /m /p:Configuration=${{env.BUILD_CONFIGURATION}} /p:Platform=${{matrix.platform}} ${{env.SOLUTION_FILE_PATH}}
-
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v4
+      run: nuget restore AimpYouTubeDL.sln
+    
+    - name: Build Solution (Debug)
+      run: |
+        msbuild /p:Configuration=Debug /p:Platform=x86 AimpYouTubeDL.sln
+    
+    - name: Build Solution (Release)
+      run: |
+        msbuild /p:Configuration=Release /p:Platform=x86 AimpYouTubeDL.sln
+		
+	- name: Upload build artifacts
+      uses: actions/upload-artifact@v3
       with:
-        name: AimpYouTubeDL-${{matrix.platform}}
-	path: build/Release/
-   #     path: |
-   #       ${{matrix.platform}}\${{env.BUILD_CONFIGURATION}}\*.dll
-   #       ${{matrix.platform}}\${{env.BUILD_CONFIGURATION}}\*.pdb
-   
+        name: build-artifacts
+        path: |
+          **/bin/Debug/
+          **/bin/Release/
