@@ -24,15 +24,15 @@ jobs:
       run: nuget restore AimpYouTubeDL.sln
         
     - name: Build C++ Project
-      run: msbuild AimpSharpRef/AimpSharpRef.vcxproj /p:Configuration=Release /p:Platform=Win32
+      run: msbuild AimpSharpRef\AimpSharpRef.vcxproj /p:Configuration=Release /p:Platform=Win32
         
     - name: Build C# Project
-      run: msbuild AimpYouTubeDL/AimpYouTubeDL.csproj /p:Configuration=Release /p:Platform=x86
+      run: msbuild AimpYouTubeDL\AimpYouTubeDL.csproj /p:Configuration=Release /p:Platform=x86
 
     - name: Upload Build Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: AimpYouTubeDL
         path: |
-          AimpSharpRef/Release/*.dll
-          AimpYouTubeDL/bin/Release/*.dll
+          **\Release\*.dll
+        if-no-files-found: warn
