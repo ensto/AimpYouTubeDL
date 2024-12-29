@@ -1,42 +1,46 @@
-name: Build Solution
+name: Build and Test AimpYouTubeDL
 
 on:
   push:
-    branches: [ main ]
+    branches:
+      - main
   pull_request:
-    branches: [ main ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
-    runs-on: windows-latest
-    
+    runs-on: windows-latest  # Для работы с .NET на Windows
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Setup MSBuild
-      uses: microsoft/setup-msbuild@v1.1
-    
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: '6.0.x'
-    
-    - name: Restore NuGet packages
-      run: nuget restore AimpYouTubeDL.sln
-    
-    - name: Build Solution (Debug)
-      run: |
-        msbuild /p:Configuration=Debug /p:Platform=x86 AimpYouTubeDL.sln
-    
-    - name: Build Solution (Release)
-      run: |
-        msbuild /p:Configuration=Release /p:Platform=x86 AimpYouTubeDL.sln
-		
-	- name: Upload build artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: build-artifacts
-        path: |
-          **/bin/Debug/
-          **/bin/Release/
+      # Шаг 1: Checkout кода из репозитория
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      # Шаг 2: Установить .NET SDK
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '6.0'  # Установите версию .NET, которая используется в проекте
+
+      # Шаг 3: Восстановление зависимостей
+      - name: Restore dependencies
+        run: dotnet restore
+
+      # Шаг 4: Сборка проекта
+      - name: Build the project
+        run: dotnet build --configuration Release
+
+      # Шаг 5: Запуск юнит-тестов (если они есть)
+      - name: Run tests
+        run: dotnet test --configuration Release
+
+      # Шаг 6: (Опционально) Публикация артефактов сборки
+      - name: Publish build artifacts
+        run: |
+          mkdir -p output
+          dotnet publish --configuration Release --output ./output
+
+      # Шаг 7: (Опционально) Прочие действия, например, загрузка артефактов или деплой
+      # можно добавить дополнительные шаги в зависимости от требований проекта
