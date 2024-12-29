@@ -24,6 +24,7 @@ jobs:
 
     - name: Build solution
       run: cmake --build build --config Release
+      
 
     - name: Archive build output
       uses: actions/upload-artifact@v3
