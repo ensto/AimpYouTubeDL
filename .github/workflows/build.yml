@@ -20,9 +20,6 @@ jobs:
     - name: Set up Visual Studio
       uses: microsoft/setup-msbuild@v1
 
-    - name: Configure CMake
-      run: cmake -B build -A x64
-
     - name: Build solution
       run: cmake --build build --config Release
       
