@@ -1,54 +1,33 @@
-name: Build AimpYouTubeDL
+name: Build and Test with Visual Studio
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
   pull_request:
-    branches: [ main, master ]
+    branches:
+      - main
 
 jobs:
   build:
-    runs-on: windows-2019
-    
+    runs-on: windows-latest
+
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Add MSBuild to PATH
-      uses: microsoft/setup-msbuild@v1.1
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Set up Visual Studio
+      uses: actions/setup-msbuild@v1
       with:
-        vs-version: '16.11'
-        msbuild-architecture: 'x86'
-        
-    - name: Setup Visual Studio Developer Command Prompt
-      uses: seanmiddleditch/gha-setup-vsdevenv@v4
-        
-    - name: Setup Python
-      uses: actions/setup-python@v4
+        vs-version: 'latest'
+
+    - name: Build Project
+      run: msbuild AimpYouTubeDL.sln /p:Configuration=Release
+
+    - name: Archive Artifacts
+      uses: actions/upload-artifact@v2
       with:
-        python-version: '3.7.3'
-        architecture: 'x86'
-        
-    - name: Download Python Embedded
-      run: |
-        Invoke-WebRequest -Uri "https://www.python.org/ftp/python/3.7.3/python-3.7.3-embed-win32.zip" -OutFile "AimpYouTubeDL/python-3.7.3-embed-win32.zip"
-      
-    - name: Restore NuGet packages
-      run: |
-        nuget restore AimpYouTubeDL.sln
-        
-    - name: Build Solution
-      run: |
-        msbuild AimpYouTubeDL.sln /p:Configuration=Release /p:Platform=x86
-        
-    - name: Create Release Artifact
-      run: |
-        $pluginPath = "C:\Program Files (x86)\AIMP\Plugins\aimp_youtubedl"
-        if (Test-Path $pluginPath) {
-          Compress-Archive -Path "$pluginPath\*" -DestinationPath "aimp_youtubedl.zip" -Force
-        }
-        
-    - name: Upload Build Artifacts
-      uses: actions/upload-artifact@v3
-      with:
-        name: aimp_youtubedl
-        path: aimp_youtubedl.zip
+        name: Build-Output
+        path: |
+          **/Release/
+          !**/obj/
